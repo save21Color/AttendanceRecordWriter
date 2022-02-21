@@ -1,0 +1,7 @@
+bin/
+obj/
+suo.*
+.suo
+ide
+*.ide
+*.bak

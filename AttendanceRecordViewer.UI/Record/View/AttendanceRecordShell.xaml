@@ -1,0 +1,258 @@
+﻿<UserControl x:Class="AttendanceRecordWriter.UI.Views.AttendanceRecordShell"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+             xmlns:ri="clr-namespace:Reactive.Bindings.Interactivity;assembly=ReactiveProperty.NET46"
+             xmlns:system="clr-namespace:System;assembly=mscorlib"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:coverter="clr-namespace:AttendanceRecordWriter.UI.Converter"
+             mc:Ignorable="d"
+             xmlns:prism="http://prismlibrary.com/"
+             prism:ViewModelLocator.AutoWireViewModel="True">
+    <UserControl.Resources>
+        <coverter:AttendanceToStateConverter x:Key="AttendanceToStateConverter" />
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="0.2*" />
+            <RowDefinition Height="0.8*" />
+            <RowDefinition Height="auto" />
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0.5*" />
+            <ColumnDefinition Width="0.5*" />
+            <ColumnDefinition Width="auto" />
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Orientation="Vertical">
+            <StackPanel Orientation="Horizontal">
+                <Button HorizontalAlignment="Left" Width="10" Height="10" Margin="4" Content="編集" Command="{Binding KanriEditClickedCommand}"/>
+                <ComboBox  Width="250" IsReadOnly="True">
+                    <ComboBoxItem  IsSelected="False">
+                        <ComboBoxItem.Template>
+                            <ControlTemplate>
+                                <ListBox ItemsSource="{Binding SelectedKanriCodes}" ScrollViewer.VerticalScrollBarVisibility="Visible" SelectedItem="{Binding SelectKanriCode.Value}" SelectionMode="Multiple">
+                                    <i:Interaction.Triggers>
+                                        <i:EventTrigger EventName="SelectionChanged">
+                                            <ri:EventToReactiveCommand Command="{Binding DataContext.SelectedCommand,RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                        </i:EventTrigger>
+                                    </i:Interaction.Triggers>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock>
+                                                    <TextBlock.Text>
+                                                        <MultiBinding StringFormat=" {0} - {1}">
+                                                            <Binding Path="KanriCode" />
+                                                            <Binding Path="KanriName" />
+                                                        </MultiBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </ControlTemplate>
+                        </ComboBoxItem.Template>
+                    </ComboBoxItem>
+                </ComboBox>
+                <TextBlock Text="管理コード編集" Margin="0,0,4,0"/>
+            </StackPanel>
+            <StackPanel  Height="90" Width="460" HorizontalAlignment="Left">
+                <Border BorderBrush="Gray" BorderThickness="1">
+                    <StackPanel Orientation="Vertical">
+                        <WrapPanel Orientation="Vertical">
+                            <ItemsControl ItemsSource="{Binding InitializePastWorks,UpdateSourceTrigger=PropertyChanged}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Vertical" Height="100" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate >
+                                        <Border BorderBrush="Gray" BorderThickness="1">
+                                            <TextBlock Width="230" Height="30" Text="{Binding KanriCode}" />
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </StackPanel>
+        <Grid Grid.Row="1" Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="auto" />
+            </Grid.RowDefinitions>
+            <materialDesign:DialogHost Identifier="TekiyouClicked" IsOpen="{Binding IsTekkiyouClick.Value}" >
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="DialogClosing" >
+                        <ri:EventToReactiveCommand Command="{Binding ExecuteTekiyouInputCommand}" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+                <materialDesign:DialogHost.DialogContent>
+                    <Border Width="300" Height="auto" MinHeight="400"  BorderBrush="Gray" BorderThickness="0.5"
+                            HorizontalAlignment="Center" VerticalAlignment="Center" >
+                        <Grid  Margin="8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto" />
+                                <RowDefinition Height="0.8*" />
+                                <RowDefinition Height="0.2*" />
+                                <RowDefinition Height="0.2*" />
+                            </Grid.RowDefinitions>
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Vertical" Grid.Row="1">
+                                <TextBlock Text="勤務時間" HorizontalAlignment="Left" Margin="12,8,12,8" />
+
+                                <DataGrid CanUserAddRows="False" AutoGenerateColumns="False"
+                                  materialDesign:DataGridAssist.CellPadding="4 2 2 2" materialDesign:DataGridAssist.ColumnHeaderPadding="4 2 2 2"
+                                  ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                                  ItemsSource="{Binding TempAttendanceWork}"
+                                  Tag="{Binding DataContext,RelativeSource={RelativeSource Mode=Self}}"
+                                  >
+                                    <DataGrid.Columns>
+                                        <DataGridTemplateColumn Header="管理コード" Width="*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <ComboBox Style="{StaticResource MaterialDesignDataGridComboBox}" 
+                                                              ItemsSource="{Binding DataContext.InitializePastWorks,RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                              SelectedItem="{Binding DataContext.SelectedAttendanceWork.Value,RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                              DisplayMemberPath="KanriCode" >
+                                                    </ComboBox>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <materialDesign:MaterialDataGridTextColumn Header="勤務時間" Binding="{Binding WorkingTime}" Width="*" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                            <StackPanel Orientation="Vertical" Grid.Row="2">
+                                <TextBlock Text="摘要" HorizontalAlignment="Left" Margin="12,8,12,8" />
+                                <TextBox Text="{Binding TempTekiyouContent.Value}" Grid.Row="1" ></TextBox>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="3">
+                                <Button Style="{StaticResource MaterialDesignFlatButton}" IsDefault="True" Margin="12,4,12,4" 
+                                        Command="materialDesign:DialogHost.CloseDialogCommand" Content="確認">
+                                    <Button.CommandParameter>
+                                        <system:Boolean>True</system:Boolean>
+                                    </Button.CommandParameter>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}" IsCancel="True" Margin="0,4,12,4" 
+                                        Command="materialDesign:DialogHost.CloseDialogCommand" Content="キャンセル">
+                                    <Button.CommandParameter>
+                                        <system:Boolean>False</system:Boolean>
+                                    </Button.CommandParameter>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </materialDesign:DialogHost.DialogContent>
+                <StackPanel Orientation="Vertical" Margin="4">
+                    <TextBlock Text="勤務予定" />
+                    <DataGrid ItemsSource="{Binding AttendancePlan}" MaxHeight="500" 
+                          CanUserSortColumns="True" CanUserAddRows="False" AutoGenerateColumns="False"
+                          materialDesign:DataGridAssist.CellPadding="4 2 2 2" materialDesign:DataGridAssist.ColumnHeaderPadding="4 2 2 2"
+                          ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                          >
+                        <DataGrid.Resources>
+                            <Style TargetType="DataGridRow">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsHoliday}" Value="true">
+                                        <Setter Property="Foreground" Value="Red" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.Resources>
+                        <DataGrid.Columns>
+                            <materialDesign:MaterialDataGridTextColumn Header="日" Binding="{Binding Day}" />
+                            <materialDesign:MaterialDataGridTextColumn Header="曜日" Binding="{Binding DayOfWeek}" />
+                            <DataGridTemplateColumn Header="休み" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <CheckBox IsChecked="{Binding IsHoliday}" Command="{Binding DataContext.PlanHolidayCheckedCommand,RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                      CommandParameter="{Binding Day}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <materialDesign:MaterialDataGridTextColumn Header="場所" Binding="{Binding WorkPlaceCount}" />
+                            <materialDesign:MaterialDataGridTextColumn Header="始業時間" Binding="{Binding WorkTimeStart}" />
+                            <materialDesign:MaterialDataGridTextColumn Header="終業時間" Binding="{Binding WorkTimeEnd}" />
+                            <materialDesign:MaterialDataGridTextColumn Header="実働時間" Binding="{Binding WorkingTime}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </materialDesign:DialogHost>
+        </Grid>
+
+        <Grid Grid.Row="1" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="auto" />
+            </Grid.RowDefinitions>
+            <StackPanel Orientation="Vertical" Margin="4">
+                <TextBlock Text="勤務実績" />
+                <DataGrid ItemsSource="{Binding AttendanceWork}" MaxHeight="500"
+                          CanUserSortColumns="True" CanUserAddRows="False" AutoGenerateColumns="False"
+                          materialDesign:DataGridAssist.CellPadding="4 2 2 2" materialDesign:DataGridAssist.ColumnHeaderPadding="4 2 2 2"
+                          ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                          >
+                    <DataGrid.Resources>
+                        <Style TargetType="DataGridRow">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsHoliday}" Value="true">
+                                    <Setter Property="Foreground" Value="Red" />
+                                    <Setter Property="IsEnabled" Value="False" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.Resources>
+                    <DataGrid.Columns>
+                        <materialDesign:MaterialDataGridTextColumn Header="日" Binding="{Binding Day}" />
+                        <materialDesign:MaterialDataGridTextColumn Header="曜日" Binding="{Binding DayOfWeek}" />
+                        <DataGridCheckBoxColumn  Binding="{Binding IsHoliday}" ElementStyle="{StaticResource MaterialDesignDataGridCheckBoxColumnStyle}">
+                            <DataGridCheckBoxColumn.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="休み" />
+                                </StackPanel>
+                            </DataGridCheckBoxColumn.Header>
+
+                        </DataGridCheckBoxColumn>
+                        <materialDesign:MaterialDataGridTextColumn Header="場所" Binding="{Binding WorkPlaceCount}" />
+                        <materialDesign:MaterialDataGridTextColumn Header="始業時間" Binding="{Binding WorkTimeStart}" />
+                        <materialDesign:MaterialDataGridTextColumn Header="終業時間" Binding="{Binding WorkTimeEnd}" />
+                        <materialDesign:MaterialDataGridTextColumn Header="実働時間" Binding="{Binding WorkingTime}" />
+                        <DataGridTemplateColumn Header="勤怠">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ComboBox Style="{StaticResource MaterialDesignDataGridComboBox}" ItemsSource="{Binding DataContext.States ,RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="編集">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Button Width="15" Height="15" Command="{Binding DataContext.TekiyouClickedCommand,RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                    CommandParameter="{Binding Day}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>
